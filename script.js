@@ -9,7 +9,11 @@ let boosts = {
       isIntervalType: true,
       status: false,
       value: 10,
-      color: "#7FDBFF" 
+      color: "#7FDBFF",
+      unlockType: {
+         type: "timer",
+         time: "25s",
+      },
    },
    ["interval-boost"]: {
       label: "Faster auto points",
@@ -17,15 +21,23 @@ let boosts = {
       isIntervalType: true,
       status: false,
       value: 10,
-      color: "#01FF70" 
+      color: "#01FF70",
+      unlockType: {
+         type: "points",
+         minimum: 10,
+      },
    },
    ["click-boost"]: {
       label: "Click boost 2x",
-      description: "Ger dubbla poäng varje gång du klickar.",
+      description: "Ger dubbelt poäng varje gång du klickar.",
       isIntervalType: false,
       status: false,
       value: 5,
-      color: "#39CCCC"
+      color: "#39CCCC",
+      unlockType: {
+         type: "points",
+         minimum: 40,
+      },
    },
    ["mega-click-boost"]: {
       label: "Mega click boost 3x",
@@ -33,20 +45,83 @@ let boosts = {
       isIntervalType: false,
       status: false,
       value: 20,
-      color: "#FFDC00" 
+      color: "#FFDC00",
+      unlockType: {
+         type: "timer",
+         time: "2min",
+      },
    },
+}
+
+// Denna funktionen skapar en interval beroende på id och kollar om current points blir mer en minimum requiered poäng och den startar callbackken för vidare dom ändringarna
+let requierementCheckIntervals = {}
+function addPointRequirement(element, id, minimum, callback) {
+   requierementCheckIntervals[id] = setInterval(() => {
+      if (currentPoint >= minimum) {
+         if (callback) {
+            callback()
+         }
+         clearInterval(requierementCheckIntervals[id])
+         requierementCheckIntervals[id] = null;
+      }
+      $(element).text("Remaining Coins: "+ (minimum - currentPoint))
+   }, 100);
+}
+
+// Det är en funktion som jag tåg från google jag ändra den lite för jquery och jag gjorde att det fungerar korrekt, den skapar en timer på spesifik elementet och när den är klar så den har samma callback system som addPointRequirement funktionen
+function startTimer(element, duration, callback) {
+   let ms = parseDuration(duration);
+   let endTime = Date.now() + ms;
+   function update() {
+      let remaining = endTime - Date.now();
+      if (remaining <= 0) {
+          $(element).text("00:00");
+          if (callback) callback();
+          return;
+      }
+      let seconds = Math.floor(remaining / 1000);
+      let minutes = Math.floor(seconds / 60);
+      seconds = seconds % 60;
+      $(element).text(
+         String(minutes).padStart(2, '0') + ":" +
+         String(seconds).padStart(2, '0')
+      );
+      requestAnimationFrame(update);
+   }
+   update();
+}
+function parseDuration(str) {
+   str = str.toLowerCase().trim();
+   if (str.endsWith("ms")) return parseInt(str);
+   if (str.endsWith("s")) return parseInt(str) * 1000;
+   if (str.endsWith("m") || str.endsWith("min")) return parseInt(str) * 60000;
+   return parseInt(str);
 }
 
 function updateCoins() {
    $(".coin").html("$"+currentCoin)
 }
 
+function setStatusOfFeature(id, status) {
+   if (boosts[id]) {
+      boosts[id].locked = status 
+      if (status == true) {
+         $(`.boosts-container-boost[data-id="${id}"]`).find(".lock").show()
+         $(`.boosts-container-boost[data-id="${id}"]`).find("h3").hide()
+      } else {
+         $(`.boosts-container-boost[data-id="${id}"]`).find(".lock").hide()
+         $(`.boosts-container-boost[data-id="${id}"]`).find("h3").show()
+      }
+   }
+}
+
 // Här lägger jag dinamiskt nya elementer för boosts och skapar första default intervallen som körs direkt och skapar en interval som ger coins varje 2 sekunder automatisk random. minst 1 och max 4 coins ger den
 $(document).ready(function() {
    $(".boosts-container").empty()
    $.each(boosts, function(k, v) {
+      boosts[k].locked = false;
       $(".boosts-container").append(`
-         <div class="boosts-container-boost opacityLow" data-id="${k}">
+         <div class="boosts-container-boost" data-id="${k}">
             <div class="rarity-shadow" style="
               background: linear-gradient(
                 to right,
@@ -58,8 +133,26 @@ $(document).ready(function() {
             <h1 style="color: ${v.color}">${v.label}</h1>
             <h2>${v.description}</h2>
             <h3>$${v.value}</h3>
+            <div class="lock">
+               <span class="timer"></span>
+               <svg class="lock-icon" stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 448 512" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M144 144l0 48 160 0 0-48c0-44.2-35.8-80-80-80s-80 35.8-80 80zM80 192l0-48C80 64.5 144.5 0 224 0s144 64.5 144 144l0 48 16 0c35.3 0 64 28.7 64 64l0 192c0 35.3-28.7 64-64 64L64 512c-35.3 0-64-28.7-64-64L0 256c0-35.3 28.7-64 64-64l16 0z"></path></svg>
+            </div>
          </div>
       `)
+      setTimeout(() => {
+         // Här lockar jag alla elementer och sedan jag kollar hur man ska unlocka dem och lägger callbacks
+         setStatusOfFeature(k, true)
+         if (v.unlockType.type == "timer") {
+            startTimer($(`.boosts-container-boost[data-id="${k}"]`).find(".lock").find(".timer"), v.unlockType.time, function() {
+               setStatusOfFeature(k, false)
+            })
+         }
+         if (v.unlockType.type == "points") {
+            addPointRequirement($(`.boosts-container-boost[data-id="${k}"]`).find(".lock").find(".timer"), k, v.unlockType.minimum, function() {
+               setStatusOfFeature(k, false)
+            })
+         }
+      }, 100);
    })
    setTimeout(() => {
       createInterval()
@@ -73,7 +166,7 @@ $(document).ready(function() {
 // Det är en funktion för att skapa en ny interval med mindre tid för en boost och jag ändrar per click point baserad på om boosten är aktiverad eller inte
 function newBuy(type) {
    $(`.boosts-container-boost[data-id="${type}"]>h3`).html(`<svg style="color: #01FF70 !important; font-size: 23px !important;" stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 448 512" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M438.6 105.4c12.5 12.5 12.5 32.8 0 45.3l-256 256c-12.5 12.5-32.8 12.5-45.3 0l-128-128c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0L160 338.7 393.4 105.4c12.5-12.5 32.8-12.5 45.3 0z"></path></svg>`)
-   $(`.boosts-container-boost[data-id="${type}"]`).css("opacity", "60%").css("pointer-events", "none")
+   $(`.boosts-container-boost[data-id="${type}"]`).css("opacity", "60%").css("pointer-events", "none").css("transform", "scale(0.98A)")
    if (type == "interval-boost") {
       createInterval()
    }
@@ -93,6 +186,9 @@ $(document).on("click", ".boosts-container-boost", function () {
    if (boosts[type]) {
       let selectedData = boosts[type]; 
       if (selectedData.status == true) {
+         return 
+      }
+      if (selectedData.locked == true) {
          return 
       }
       Swal.fire({

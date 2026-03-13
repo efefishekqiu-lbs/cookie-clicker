@@ -162,6 +162,44 @@ body {
   border: 1px solid #ffffff89;
   border-radius: 5px;
   margin-bottom: 1vh;
+  transition: all ease-in 90ms;
+  z-index: 9999;
+  cursor: pointer;
+}
+
+.boosts-container-boost:not(:has(.lock)):hover {
+  opacity: 70%;
+}
+
+.lock {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 99%;
+  height: 100%;
+  z-index: 999999;
+  background-color: rgba(0, 0, 0, 0.468);
+  backdrop-filter: blur(1px);
+  pointer-events: none;
+}
+
+.lock-icon {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: max-content;
+  color: #fff;
+  font-size: 25px;
+}
+
+.lock .timer {
+  position: absolute;
+  top: 50%;
+  right: 1.6vw;
+  color: #fff;
+  transform: translate(0, -50%);
+  font-size: 20px;
 }
 
 .boosts-container-boost>img {
