@@ -1,3 +1,4 @@
+// Det är en parent function som innehåller get och set den är för local save, den sprarar current point och när du refreshar spelet så poängen sparas
 const storage = {
    get(key) {
      const value = localStorage.getItem(key);
@@ -12,7 +13,8 @@ const storage = {
    set(key, value) {
      localStorage.setItem(key, value.toString());
    }
- };
+};
+
 let currentPoint = storage.get("coins");
 let currentCoin = 0;
 
