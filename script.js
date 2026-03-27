@@ -1,5 +1,21 @@
-let currentPoint = 0;
+const storage = {
+   get(key) {
+     const value = localStorage.getItem(key);
+     
+     if (value === null) {
+       return 0;
+     }
+ 
+     return Number(value);
+   },
+ 
+   set(key, value) {
+     localStorage.setItem(key, value.toString());
+   }
+ };
+let currentPoint = storage.get("coins");
 let currentCoin = 0;
+
 let defaultIntervalTimer = 1000
 let autoInterval = null;
 let boosts = {
@@ -169,6 +185,7 @@ $(document).ready(function() {
          }
       }, 100);
    })
+   $(".main-container>h1").html(`Poäng: ${currentPoint}`)
    // Här skapar jag default intervallen
    setTimeout(() => {
       createInterval()
@@ -272,6 +289,7 @@ function newClick(type) {
       }
     }
    currentPoint = (currentPoint + addingPoint)
+   storage.set("coins", currentPoint)
    $(".main-container>h1").html(`Poäng: ${currentPoint}`)
 }
 
