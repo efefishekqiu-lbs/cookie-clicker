@@ -27,6 +27,20 @@ let boosts = {
          minimum: 10,
       },
    },
+   ["lucky-click"]: {
+      label: "Lucky Click",
+      description: "Each click has a 5% chance to give 10x more points.",
+      isIntervalType: false,
+      status: false,
+      value: 15,
+      color: "#FF851B",
+      chance: 0.05,
+      multiplier: 10,
+      unlockType: {
+         type: "points",
+         minimum: 100,
+      },
+   },
    ["click-boost"]: {
       label: "Click boost 2x",
       description: "Ger dubbelt poäng varje gång du klickar.",
@@ -102,6 +116,7 @@ function updateCoins() {
    $(".coin").html("$"+currentCoin)
 }
 
+// Det är en funktion som lockar upgrades så när man köper då locked status ändras till true och man kan inte köpa den igen + elementet blir disabled grund av lock elementet som existerar på varenda uppgrade den blir synlig och parent elementet blir disabled
 function setStatusOfFeature(id, status) {
    if (boosts[id]) {
       boosts[id].locked = status 
@@ -154,9 +169,11 @@ $(document).ready(function() {
          }
       }, 100);
    })
+   // Här skapar jag default intervallen
    setTimeout(() => {
       createInterval()
    }, 100);
+   // Här skapar jag en interval som körs varenda 2 sekunder och den ger random money minst 1 och max 4
    setInterval(() => {
       currentCoin += Math.floor(Math.random() * 4) + 1;
       updateCoins()
@@ -246,7 +263,13 @@ function newClick(type) {
       if (boosts["mega-click-boost"].status == true) {
          addingPoint = addingPoint + 3
       }
-      console.log(addingPoint)
+
+      if (boosts["lucky-click"]?.status) {
+         if (Math.random() < boosts["lucky-click"].chance) {
+            addingPoint = addingPoint * boosts["lucky-click"].multiplier;
+            console.log("LUCKY CLICK!");
+         }
+      }
     }
    currentPoint = (currentPoint + addingPoint)
    $(".main-container>h1").html(`Poäng: ${currentPoint}`)
