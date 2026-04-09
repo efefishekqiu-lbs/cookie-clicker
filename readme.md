@@ -18,20 +18,29 @@ Det finns också automatiska poäng som genereras över tid.
 ## Teknik & lösningar
 
 ### Variabler
-- currentPoint – spelarens poäng  
+- currentPoint – spelarens poäng (sparas i localStorage)  
 - currentCoin – används för att köpa upgrades  
-- storage – sparar poäng i localStorage  
+- defaultIntervalTimer – standard tid för auto-poäng
+- autoInterval – sparar nuvarande interval  
 
 ### Funktioner
 
-newClick()  
-- Hanterar klick och räknar ut poäng beroende på upgrades  
+newClick(type)  
+- Hanterar klick och auto-poäng  
+- Räknar ut hur mycket poäng spelaren får beroende på boosts  
+
+createInterval()  
+- Skapar eller uppdaterar auto-poäng interval  
+
+newBuy(type)  
+- Körs när en upgrade köps  
+- Aktiverar effekter och uppdaterar UI  
 
 updateCoins()  
 - Uppdaterar coins på skärmen  
 
-addEventListener  
-- Används för att lyssna på klick på cookie och upgrades  
+setStatusOfFeature(id, status)  
+- Låser eller låser upp upgrades  
 
 ---
 
